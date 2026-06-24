@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电池智能预测系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center">电池智能预测系统</h3>
+                    <p class="text-center mb-0">支持电池寿命预测、故障风险预警、更换建议生成</p>
+                </div>
+                <div class="card-body">
+                    <!-- 上传区域 -->
+                    <div class="upload-area mb-4 p-4 border rounded bg-white">
+                        <h5 class="mb-3">上传电池数据Excel文件</h5>
+                        <form th:action="@{/upload}" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">上传并开始预测</button>
+                        </form>
+                    </div>
+
+                    <!-- 错误提示 -->
+                    <div th:if="${success != null and !success}" class="alert alert-danger" role="alert">
+                        <span th:text="${errorMsg}"></span>
+                    </div>
+
+                    <!-- 预测结果 -->
+                    <div th:if="${success != null and success and result != null}" class="result-area">
+                        <h4 class="mb-3">预测结果详情</h4>
+
+                        <!-- 基础信息 -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0">电池基础信息</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <p><strong>电池组ID：</strong><span th:text="${result.batteryGroupId}"></span></p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p><strong>电芯数量：</strong><span th:text="${result.cellCount}"></span>串</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p><strong>当前SOH：</strong><span th:text="${result.currentSoh}"></span>%</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p><strong>当前SOC：</strong><span th:text="${result.currentSoc}"></span>%</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p><strong>数据条数：</strong><span th:text="${result.dataCount}"></span>条</p>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <p><strong>最新数据时间：</strong><span th:text="${#dates.format(result.latestDataTime, 'yyyy-MM-dd HH:mm:ss')}"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 寿命预测 -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">电池寿命预测</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <p><strong>剩余循环寿命：</strong><span th:text="${result.remainingCycleLife}"></span>次</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>剩余可使用天数：</strong><span th:text="${result.remainingUseDays}"></span>天</p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <p><strong>SOH日衰减率：</strong><span th:text="${result.sohDecayRate}"></span>%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 故障预测 -->
+                        <div class="card mb-3">
+                            <div class="card-header" th:class="${result.faultRiskLevel == '高风险' ? 'bg-danger text-white' : result.faultRiskLevel == '中风险' ? 'bg-warning text-dark' : 'bg-success text-white'}">
+                                <h5 class="mb-0">故障风险预测 - <span th:text="${result.faultRiskLevel}"></span></h5>
+                            </div>
+                            <div class="card-body">
+                                <div th:if="${result.faultTypes != null and !result.faultTypes.isEmpty()}">
+                                    <h6>异常类型：</h6>
+                                    <ul>
+                                        <li th:each="type : ${result.faultTypes}" th:text="${type}"></li>
+                                    </ul>
+                                    <h6>异常详情：</h6>
+                                    <ul>
+                                        <li th:each="detail : ${result.faultDetails}" th:text="${detail}"></li>
+                                    </ul>
+                                </div>
+                                <div th:if="${result.faultTypes == null or result.faultTypes.isEmpty()}">
+                                    <p class="text-success">未检测到异常，电池状态良好</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 更换预测 -->
+                        <div class="card mb-3">
+                            <div class="card-header" th:class="${result.replaceSuggestion == '强制更换' ? 'bg-danger text-white' : result.replaceSuggestion == '建议更换' ? 'bg-warning text-dark' : 'bg-success text-white'}">
+                                <h5 class="mb-0">电池更换建议 - <span th:text="${result.replaceSuggestion}"></span></h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>更换建议：</strong><span th:text="${result.replaceSuggestion}"></span></p>
+                                <p><strong>预计更换天数：</strong><span th:text="${result.replaceDays}"></span>天</p>
+                                <p><strong>建议说明：</strong><span th:text="${result.replaceReason}"></span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
