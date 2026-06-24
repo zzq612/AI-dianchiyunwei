@@ -84,6 +84,22 @@ public class PredictionService {
         List<String> faultDetails = new ArrayList<>();
         int riskScore = 0;
 
+        Integer sohValue = latestData.getSoh();
+        int currentSoh = (sohValue != null) ? sohValue : 100;
+        if (currentSoh < 60) {
+            faultTypes.add("SOH严重不足");
+            faultDetails.add(String.format("电池当前SOH仅%d%%，严重衰减，存在安全隐患", currentSoh));
+            riskScore += 3;
+        } else if (currentSoh < 70) {
+            faultTypes.add("SOH偏低");
+            faultDetails.add(String.format("电池当前SOH为%d%%，衰减明显，需密切关注", currentSoh));
+            riskScore += 2;
+        } else if (currentSoh < 80) {
+            faultTypes.add("SOH下降");
+            faultDetails.add(String.format("电池当前SOH为%d%%，已接近更换阈值", currentSoh));
+            riskScore += 1;
+        }
+
         Double maxTempValue = latestData.getMaxTemp();
         double maxTemp = (maxTempValue != null) ? maxTempValue : 0.0;
         if (maxTemp > TEMP_WARN_THRESHOLD) {

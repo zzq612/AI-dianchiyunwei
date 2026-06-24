@@ -95,8 +95,8 @@ public class ExcelParseService {
                 data.setMaxIrChangeRate(getCsvDoubleValue(values, colIndexMap.get("max_ir_change_rate")));
                 data.setMaxIrCellId(getCsvIntValue(values, colIndexMap.get("max_ir_cell_id")));
                 data.setRemainingDischargeH(getCsvDoubleValue(values, colIndexMap.get("remaining_discharge_h")));
-                data.setSoh(getCsvIntValue(values, sohIndex));
-                data.setSoc(getCsvIntValue(values, socIndex));
+                data.setSoh(convertPercentage(getCsvDoubleValue(values, sohIndex)));
+                data.setSoc(convertPercentage(getCsvDoubleValue(values, socIndex)));
                 data.setAvgTemp(getCsvDoubleValue(values, colIndexMap.get("avg_temp")));
                 data.setMinTemp(getCsvDoubleValue(values, colIndexMap.get("min_temp")));
                 data.setMinTempCellId(getCsvIntValue(values, colIndexMap.get("min_temp_cell_id")));
@@ -214,8 +214,8 @@ public class ExcelParseService {
             data.setMaxIrChangeRate(getCellDoubleValue(row, colIndexMap.get("max_ir_change_rate")));
             data.setMaxIrCellId(getCellIntValue(row, colIndexMap.get("max_ir_cell_id")));
             data.setRemainingDischargeH(getCellDoubleValue(row, colIndexMap.get("remaining_discharge_h")));
-            data.setSoh(getCellIntValue(row, colIndexMap.get("soh")));
-            data.setSoc(getCellIntValue(row, colIndexMap.get("soc")));
+            data.setSoh(convertPercentage(getCellDoubleValue(row, colIndexMap.get("soh"))));
+            data.setSoc(convertPercentage(getCellDoubleValue(row, colIndexMap.get("soc"))));
             data.setAvgTemp(getCellDoubleValue(row, colIndexMap.get("avg_temp")));
             data.setMinTemp(getCellDoubleValue(row, colIndexMap.get("min_temp")));
             data.setMinTempCellId(getCellIntValue(row, colIndexMap.get("min_temp_cell_id")));
@@ -292,4 +292,13 @@ public class ExcelParseService {
             }
         }
     }
+
+    private Integer convertPercentage(Double value) {
+        if (value == null) return null;
+        if (value > 0 && value <= 1.0) {
+            return (int) Math.round(value * 100);
+        }
+        return value.intValue();
+    }
+
 }
